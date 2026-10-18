@@ -1,223 +1,199 @@
 # Azure Identity & Governance Lab
 
-**Microsoft Entra ID · Azure RBAC · Azure Policy · MFA · Cost Management · Resource Locks · Monitoring**
+This project is a hands-on Azure lab I built for a fictional company called **Northstar Technologies**.
 
-## Project Overview
+The goal was to set up a simple identity and governance environment using **Microsoft Entra ID, Azure RBAC, MFA, Azure Policy, budgets, resource locks, and logs**.
 
-This hands-on Microsoft Azure project demonstrates how I built an identity and governance foundation for **Northstar Technologies**, a fictional organization. The lab focuses on user and group management, least-privilege authorization, identity security, regional policy enforcement, resource protection, cost governance, and audit visibility.
+**Main rule:** resources should be deployed in **Canada Central**. I tested this by intentionally trying to deploy a resource in **East US**, and Azure Policy blocked it.
 
-The environment uses **Canada Central** as its approved Azure region. A deployment to **East US was intentionally attempted and successfully blocked** to validate the Azure Policy control.
+## What I Set Up
 
-## Implementation & Evidence
-
-### 1. Configure Cost Governance
-
-I started by creating a monthly Azure budget named `budget-northstar-lab`. The budget limit was set to **10 in the subscription currency**, with alert thresholds at **50%, 80%, and 100%**. This provides early visibility into unexpected lab spending and demonstrates basic Azure Cost Management governance.
-
-![1. Configure Cost Governance](01-budget-configuration.png)
-
-**Evidence:** The budget configuration shows the monthly limit and the three cost alert thresholds used for the lab.
-
----
-
-### 2. Create the Governance Resource Group
-
-I created `rg-northstar-governance` in **Canada Central**, the approved region for Northstar Technologies. I also applied tags for `Environment`, `Project`, `Department`, and `ManagedBy` so the environment can be identified and organized consistently.
-
-![2. Create the Governance Resource Group](02-resource-group-overview.png)
-
-**Evidence:** The resource group overview confirms the Canada Central location and the governance tags applied to the lab.
+- 4 Microsoft Entra ID users
+- 3 security groups for CloudOps, Engineering, and Security
+- Contributor and Reader permissions using Azure RBAC
+- Microsoft Entra Security Reader role
+- Security defaults and Microsoft Authenticator MFA
+- Azure Policy to audit and block resources outside Canada Central
+- Monthly Azure budget and cost alerts
+- Delete lock on the governance resource group
+- Azure Activity Log, Entra audit logs, and sign-in logs
 
 ---
 
-### 3. Create Microsoft Entra Users
+## Lab Steps
 
-I created four lab identities in Microsoft Entra ID to represent users with different responsibilities. These identities provide the foundation for testing group-based access, directory roles, authentication security, and audit logging.
+### 1. Set Up a Budget
 
-![3. Create Microsoft Entra Users](03-entra-users.png)
+I created a monthly budget called `budget-northstar-lab` with a limit of **10**. I added alerts at **50%, 80%, and 100%** so I can track spending before it gets too high.
 
-**Evidence:** The Entra users page shows the lab identities created for the Northstar environment.
-
----
-
-### 4. Organize Access with Security Groups
-
-Instead of managing permissions separately for every user, I created three security groups: `SG-CloudOps`, `SG-Engineering`, and `SG-Security`. This models a more scalable approach where access is assigned according to job function.
-
-![4. Organize Access with Security Groups](04-entra-security-groups.png)
-
-**Evidence:** The Entra groups page confirms the three security groups used to separate CloudOps, Engineering, and Security responsibilities.
+![1. Set Up a Budget](01-budget-configuration.png)
 
 ---
 
-### 5. Apply Azure RBAC at the Resource-Group Scope
+### 2. Create the Resource Group
 
-I assigned **Contributor** to the CloudOps group and **Reader** to the Engineering and Security groups at `rg-northstar-governance`. This gives CloudOps resource-management capability while allowing the other teams to inspect resources without modifying them. The portal also shows an inherited Owner assignment from the subscription.
+I created `rg-northstar-governance` in **Canada Central**. I added tags for the environment, project, department, and management team to keep the lab organized.
 
-![5. Apply Azure RBAC at the Resource-Group Scope](05-rbac-role-assignments.png)
-
-**Evidence:** The IAM role-assignment view provides evidence of the group-based Contributor and Reader permissions and their scope.
+![2. Create the Resource Group](02-resource-group-overview.png)
 
 ---
 
-### 6. Assign the Entra Security Reader Role
+### 3. Create Entra ID Users
 
-I also reviewed an Entra **Security Reader** directory-role assignment. This is separate from Azure resource RBAC: Azure RBAC controls access to Azure resources, while Entra directory roles control permissions within Microsoft Entra ID.
+I created four users in Microsoft Entra ID. I used these accounts to test group membership, permissions, MFA, and logging throughout the lab.
 
-![6. Assign the Entra Security Reader Role](06-entra-security-reader-role.png)
-
-**Evidence:** The role assignment confirms Security Reader access at the Microsoft Entra directory layer.
+![3. Create Entra ID Users](03-entra-users.png)
 
 ---
 
-### 7. Enable Microsoft Entra Security Defaults
+### 4. Create Security Groups
 
-I enabled **Security defaults** to provide baseline identity protections for the tenant. This strengthens the lab's identity-security posture and introduces MFA-related safeguards without building a custom Conditional Access design.
+I created three security groups: `SG-CloudOps`, `SG-Engineering`, and `SG-Security`. I used groups so permissions could be managed by team instead of assigning access to each user one at a time.
 
-![7. Enable Microsoft Entra Security Defaults](07-entra-security-defaults.png)
-
-**Evidence:** The tenant settings show Security defaults enabled.
+![4. Create Security Groups](04-entra-security-groups.png)
 
 ---
 
-### 8. Register Microsoft Authenticator for MFA
+### 5. Assign Azure Roles
 
-I registered **Microsoft Authenticator** as an authentication method for a lab identity. This demonstrates the user-side setup required for stronger authentication.
+I assigned **Contributor** to CloudOps and **Reader** to Engineering and Security on the resource group. This lets CloudOps manage resources while the other teams can view them without making changes.
 
-![8. Register Microsoft Authenticator for MFA](08-mfa-registration.png)
-
-**Evidence:** The security information page confirms Microsoft Authenticator registration. It demonstrates method setup, not that every sign-in in the tenant was challenged with MFA.
+![5. Assign Azure Roles](05-rbac-role-assignments.png)
 
 ---
 
-### 9. Create a Location Audit Policy
+### 6. Assign Security Reader
 
-I configured `audit-northstar-region` with **Canada Central** as the allowed location. The Audit effect provides visibility into resources that do not meet the regional standard without blocking their creation.
+I assigned the **Security Reader** role in Microsoft Entra ID. This gives the security role read access to security-related information without giving full administrative access.
 
-![9. Create a Location Audit Policy](09-azure-policy-location-audit.png)
-
-**Evidence:** The policy assignment shows the Canada Central allowed-location parameter and Audit-based governance control.
+![6. Assign Security Reader](06-entra-security-reader-role.png)
 
 ---
 
-### 10. Create a Location Deny Policy
+### 7. Enable Security Defaults
 
-I then configured `deny-northstar-region` for the same approved location. Unlike Audit, the **Deny** effect acts as a preventive control by rejecting resource deployments that violate the location requirement.
+I enabled **Security defaults** in Microsoft Entra ID to add basic identity protection to the tenant.
 
-![10. Create a Location Deny Policy](10-azure-policy-deny.png)
-
-**Evidence:** The Deny policy assignment confirms Canada Central as the approved deployment region.
+![7. Enable Security Defaults](07-entra-security-defaults.png)
 
 ---
 
-### 11. Validate the Policy with an Intentional East US Deployment
+### 8. Register MFA
 
-To prove that the preventive control worked, I deliberately attempted to create a **network security group in East US**. East US was intentionally selected because it is outside the approved Canada Central region. Azure rejected the deployment because of the assigned policy.
+I registered **Microsoft Authenticator** for MFA on a lab account. This adds another verification method instead of relying only on a password.
 
-![11. Validate the Policy with an Intentional East US Deployment](11-policy-deny-test.png)
-
-**Evidence:** **Successful security test:** the deployment denial is the expected result. It proves that the regional Deny policy prevented a noncompliant resource from being created.
+![8. Register MFA](08-mfa-registration.png)
 
 ---
 
-### 12. Protect the Resource Group with a Delete Lock
+### 9. Create the Audit Policy
 
-I added a **Delete** management lock named `lock-northstar-delete` to the governance resource group. The lock adds protection against accidental deletion and complements access-control permissions.
+I created `audit-northstar-region` and set **Canada Central** as the allowed location. This policy can identify resources that do not follow the location rule.
 
-![12. Protect the Resource Group with a Delete Lock](12-resource-group-lock.png)
-
-**Evidence:** The Locks page confirms the Delete lock applied to the governance scope.
+![9. Create the Audit Policy](09-azure-policy-location-audit.png)
 
 ---
 
-### 13. Review Azure Activity Logs
+### 10. Create the Deny Policy
 
-I reviewed the Azure Activity Log to verify management-plane changes made during the lab, including policy assignments, role assignments, locks, and resource-group operations.
+I created `deny-northstar-region` with **Canada Central** as the allowed location. This policy blocks new resources from being deployed to a region that is not approved.
 
-![13. Review Azure Activity Logs](13-azure-activity-log.png..png)
-
-**Evidence:** The Activity Log provides a traceable record of administrative changes made to Azure resources and governance controls.
+![10. Create the Deny Policy](10-azure-policy-deny.png)
 
 ---
 
-### 14. Review Azure Policy Compliance
+### 11. Test the Deny Policy
 
-I reviewed the policy compliance dashboard after assigning the regional controls. The captured view reports **100% compliance**, but it also shows **zero evaluated resources**. For that reason, this screenshot is treated as assignment/compliance-dashboard evidence rather than proof that a deployed resource fleet was fully compliant.
+I intentionally tried to create a network security group in **East US**. The deployment was blocked because East US is outside the allowed Canada Central region. This was the expected result and confirmed that the Deny policy was working.
 
-![14. Review Azure Policy Compliance](14-azure-policy-compliance.png..png)
-
-**Evidence:** The compliance view documents the policy state at capture time. The intentional East US denial in the previous test is the stronger direct evidence that enforcement worked.
+![11. Test the Deny Policy](11-policy-deny-test.png)
 
 ---
 
-### 15. Review Microsoft Entra Sign-In Logs
+### 12. Add a Delete Lock
 
-I reviewed Microsoft Entra sign-in logs to examine interactive authentication activity and sign-in outcomes. Sign-in monitoring is important for investigating authentication issues and suspicious access patterns.
+I added a **Delete** lock called `lock-northstar-delete` to the resource group. This helps protect the resource group from accidental deletion.
 
-![15. Review Microsoft Entra Sign-In Logs](Save%20as%2015-entra-signin-logs.png..png)
-
-**Evidence:** The sign-in log captures authentication events generated by the lab identities.
+![12. Add a Delete Lock](12-resource-group-lock.png)
 
 ---
 
-### 16. Review Microsoft Entra Audit Logs
+### 13. Check the Activity Log
 
-I reviewed Entra audit logs to inspect directory-level changes such as identity, authentication-method, and application-management operations. These logs provide accountability for changes within the identity platform.
+I checked the Azure Activity Log to review changes made during the lab, including role assignments, policies, locks, and resource group updates.
 
-![16. Review Microsoft Entra Audit Logs](16-entra-audit-logs.png..png)
-
-**Evidence:** The audit log demonstrates the directory audit trail available for identity and configuration changes.
+![13. Check the Activity Log](13-azure-activity-log.png..png)
 
 ---
 
-### 17. Verify CloudOps Group Membership
+### 14. Check Policy Compliance
 
-I verified the direct membership of `SG-CloudOps`. Because this group received the Contributor role, membership determines which lab identity inherits resource-management access through the group.
+I checked the Azure Policy compliance page after creating the policies. The page showed **100% compliance**, but there were **0 resources evaluated** at that time. The blocked East US test above is the main proof that the Deny policy worked.
 
-![17. Verify CloudOps Group Membership](17-cloudops-group-membership.png..png)
+![14. Check Policy Compliance](14-azure-policy-compliance.png..png)
 
-**Evidence:** The membership view connects the CloudOps identity to the group used for Contributor access.
+---
+
+### 15. Check Sign-In Logs
+
+I checked Microsoft Entra sign-in logs to review login activity and sign-in results for the lab accounts.
+
+![15. Check Sign-In Logs](Save%20as%2015-entra-signin-logs.png..png)
+
+---
+
+### 16. Check Audit Logs
+
+I checked Microsoft Entra audit logs to review identity and directory changes made during the lab.
+
+![16. Check Audit Logs](16-entra-audit-logs.png..png)
+
+---
+
+### 17. Verify CloudOps Membership
+
+I checked `SG-CloudOps` and confirmed its member. Because this group has the Contributor role, members of the group receive the CloudOps access assigned earlier.
+
+![17. Verify CloudOps Membership](17-cloudops-group-membership.png..png)
 
 ---
 
 ### 18. Verify Engineering Access
 
-I verified the Engineering team's access configuration and membership. `SG-Engineering` was assigned the Reader role so the team can inspect resources without receiving modification privileges.
+I checked the Engineering setup and confirmed the user connected to the Engineering access. The Engineering group has the Reader role, so it can view resources without changing them.
 
 ![18. Verify Engineering Access](18-engineering-access-verification.png)
 
-**Evidence:** The Engineering verification screenshot provides evidence of the identity-to-access relationship used in the RBAC design.
+---
+
+### 19. Verify Security Membership
+
+I checked `SG-Security` and confirmed its member. The group has Reader access to the Azure resource group.
+
+![19. Verify Security Membership](19-security-team-membership.png..png)
 
 ---
 
-### 19. Verify Security Team Membership
+### 20. Final Review
 
-I verified the membership of `SG-Security`, which was assigned Reader access at the Azure resource-group level. The lab separately demonstrates the Entra Security Reader directory role, showing the distinction between resource and directory permissions.
+I reviewed the resource group one last time to confirm the **Canada Central** location and the tags used for the Northstar lab.
 
-![19. Verify Security Team Membership](19-security-team-membership.png..png)
-
-**Evidence:** The Security group membership view confirms the identity associated with the group-based Azure Reader assignment.
+![20. Final Review](20-northstar-final-governance-review.png)
 
 ---
 
-### 20. Final Governance Review
+## What I Learned
 
-I finished by reviewing the Northstar governance resource group and its configuration. The final state brings together regional organization, tagging, identity, role-based access, policy enforcement, cost controls, resource protection, and monitoring.
+This lab helped me practice how Azure identity and governance controls work together. I used groups and RBAC to control access, MFA and security defaults to improve account security, Azure Policy to enforce a location rule, a resource lock to protect the environment, and logs to review activity.
 
-![20. Final Governance Review](20-northstar-final-governance-review.png)
+The most important test was the **East US deployment**. I chose the wrong region on purpose, and Azure blocked the deployment. That confirmed the location policy was enforcing the rule I configured.
 
-**Evidence:** The final resource-group view confirms the governance scope in Canada Central. The lab focuses on identity and governance controls rather than hosting a production workload.
+## Technologies Used
 
----
-
-## Skills Demonstrated
-
-Microsoft Azure · Microsoft Entra ID · Identity and Access Management · Azure RBAC · Least Privilege · MFA · Azure Policy · Policy Enforcement Testing · Azure Cost Management · Resource Locks · Activity Logs · Entra Audit Logs · Sign-In Monitoring
-
-## Supporting Documentation
-
-Detailed implementation notes are available in the [deployment-steps](deployment-steps) directory for resource organization, Entra identities, RBAC, MFA, Azure Policy, resource protection, and monitoring.
-
-## Project Scope
-
-This project is an educational Azure identity and governance lab. The screenshots document the configuration and validation performed in the Azure portal; the environment is not presented as a production deployment or independent compliance certification.
+- Microsoft Azure
+- Microsoft Entra ID
+- Azure RBAC
+- Azure Policy
+- Azure Cost Management
+- Microsoft Authenticator
+- Azure Activity Log
