@@ -1,99 +1,133 @@
 # Azure Identity & Governance Lab
 
-**Microsoft Entra ID · Azure RBAC · Azure Policy · MFA · Cost Governance · Audit Logging**
+**Microsoft Entra ID · Azure RBAC · Azure Policy · MFA · Resource Protection · Cost Governance · Monitoring**
 
-> Hands-on Microsoft Azure administration and governance project for the fictional **Northstar Technologies** organization.
+## Project Overview
 
-## Project overview
+This hands-on Azure administration project demonstrates the foundational identity and governance controls for **Northstar Technologies**, a fictional organization. The lab focuses on organizing resources, managing identities, applying least-privilege access, restricting deployment locations, protecting against accidental deletion, setting cost alerts, and reviewing security and activity evidence.
 
-This portfolio lab demonstrates how to organize cloud resources, manage identity and access, apply least privilege, enforce regional deployment restrictions, protect resources from accidental deletion, and review audit evidence. The work is documented with real Azure portal captures.
+The key security objective was to permit deployments in **Canada Central** while **intentionally testing that an East US deployment would be blocked**.
 
-## Key results
+## Lab Configuration
 
-| Area | Lab configuration |
+| Component | Configuration |
 |---|---|
-| Approved Azure region | **Canada Central** |
-| Resource group | `rg-northstar-governance` |
-| Organization tags | Environment: Lab; Project: Identity-Governance; Department: CloudOps; ManagedBy: CloudTeam |
-| Identity | Four Microsoft Entra users; three security groups |
-| Resource permissions | CloudOps: Contributor; Engineering: Reader; Security: Reader |
-| Directory authorization | Security Reader role assignment |
-| Sign-in protection | Security defaults enabled; Authenticator MFA registration |
-| Regional governance | Separate Audit and Deny policy assignments |
-| Intentional negative test | **East US deployment denied by policy** |
+| Governance resource group | `rg-northstar-governance` |
+| Approved region | **Canada Central** |
+| Users and groups | Four Entra users, three security groups |
+| RBAC | CloudOps: Contributor; Engineering and Security: Reader |
+| Identity security | Security defaults and Authenticator MFA registration |
+| Azure Policy | Audit and Deny assignments for approved location |
+| Negative test | **East US network security group denied as designed** |
 | Resource protection | Delete lock |
-| Cost controls | Monthly budget of 10 in subscription currency; alerts at 50%, 80%, and 100% |
-| Monitoring | Azure Activity Log, Entra audit logs and sign-in logs |
+| Cost governance | Monthly budget of 10, alerts at 50%, 80%, 100% |
+| Monitoring | Activity logs, audit logs, sign-in logs |
 
-## Architecture and control flow
+## Implementation and Evidence Walkthrough
 
-```mermaid
-flowchart TD
-  A[Azure subscription] --> B[Cost budget and alerts]
-  A --> C[Governance resource group - Canada Central]
-  C --> D[Tags and ownership]
-  C --> E[Azure RBAC]
-  E --> F[CloudOps - Contributor]
-  E --> G[Engineering - Reader]
-  E --> H[Security - Reader]
-  C --> I[Audit and Deny location policies]
-  C --> J[Delete lock]
-  K[Microsoft Entra ID] --> L[Users and security groups]
-  K --> M[Security defaults and MFA]
-  K --> N[Security Reader]
-  A --> O[Activity and sign-in monitoring]
-```
+The following sequence documents the configuration, its purpose, and the corresponding validation captured during the lab.
 
-## Step-by-step implementation
+### 01. Subscription Budget
 
-| Step | Topic | What was demonstrated |
-|---|---|---|
-| 01 | [Resource organization and budget](deployment-steps/01-resource-organization.md) | Resource group, tags, budget and alerts |
-| 02 | [Microsoft Entra users and groups](deployment-steps/02-entra-users-groups.md) | Users, three team security groups and memberships |
-| 03 | [RBAC and directory roles](deployment-steps/03-rbac-roles.md) | Scoped Contributor/Reader and Security Reader assignments |
-| 04 | [MFA and security defaults](deployment-steps/04-mfa-security.md) | Authentication hardening and registration |
-| 05 | [Azure Policy and region validation](deployment-steps/05-azure-policy.md) | Audit, Deny and intentional East US rejection |
-| 06 | [Resource locks and monitoring](deployment-steps/06-locks-monitoring.md) | Delete protection, Activity Log and identity audit evidence |
+A monthly subscription budget named `budget-northstar-lab` was configured with a limit of **10 in the subscription currency** and cost alerts at **50%, 80%, and 100%**. Evaluated spend was zero at the time of capture. Budgets provide notifications rather than a hard spending cap.
 
-## Featured security validation: East US intentionally blocked
+### 02. Governance Resource Group
 
-**Canada Central is the only approved region for this lab.** The `deny-northstar-region` policy was configured to reject resources outside that location. Attempting to create a network security group in **East US** produced the expected deployment-denied message.
+The resource group `rg-northstar-governance` was established in **Canada Central** with tags for environment, project, department, and management ownership. This establishes the scope for the lab's access and policy controls.
 
-**This is a successful test of the preventive security control—not a project failure.** The separate `audit-northstar-region` policy supports visibility and evaluation.
+### 03. Microsoft Entra Users
 
-The compliance dashboard showed **100% with zero evaluated resources** at the moment captured. This must not be misrepresented as proof of compliance across a deployed resource fleet.
+Four lab user accounts were created in Microsoft Entra ID to represent different organizational responsibilities and demonstrate identity administration.
 
-## Screenshot evidence
+### 04. Departmental Security Groups
 
-Twenty screenshots were captured, organized in the following order:
+Three security groups—`SG-CloudOps`, `SG-Engineering`, and `SG-Security`—were configured to organize identities by job function rather than granting every permission individually.
 
-1. Budget configuration
-2. Resource group overview
-3. Entra users
-4. Entra security groups
-5. Resource-group RBAC assignments
-6. Entra Security Reader assignment
-7. Security defaults enabled
-8. Authenticator MFA registration
-9. Location Audit policy
-10. Location Deny policy
-11. East US deployment blocked
-12. Resource-group Delete lock
-13. Azure Activity Log
-14. Azure Policy compliance
-15. Entra sign-in logs
-16. Entra audit logs
-17. CloudOps group membership
-18. Engineering group membership
-19. Security group membership
-20. Final governance review
+### 05. Resource-Group RBAC
 
-**Image publication pending:** The screenshot files have not yet been transferred into GitHub. They will be linked and displayed here after successful upload and verification. This avoids broken images.
+At the governance resource-group scope, CloudOps received **Contributor** while Engineering and Security received **Reader**. The portal also shows an inherited subscription **Owner** assignment. This demonstrates role separation and scoped authorization.
 
-## Skills demonstrated
+### 06. Entra Security Reader Role
 
-Azure administration · Microsoft Entra ID · Identity and access management · Azure RBAC · Least privilege · MFA · Azure Policy · Policy enforcement testing · Resource locks · Cost Management · Audit investigation · Governance documentation
+A Microsoft Entra **Security Reader** directory-role assignment was reviewed. Directory roles govern Entra permissions and are distinct from Azure resource-group RBAC.
 
-## Notes
+### 07. Security Defaults
 
-This is a lab scenario, not a production compliance certification. See [project notes](PROJECT-NOTES.md) for evidence limitations and publication status.
+Microsoft Entra **security defaults** were enabled to provide baseline identity protections, including MFA-related safeguards.
+
+### 08. Authenticator MFA Registration
+
+The security information page demonstrates registration of **Microsoft Authenticator push MFA** for a lab identity. Registration is evidence of setup, not proof of MFA enforcement on every sign-in.
+
+### 09. Location Audit Policy
+
+The `audit-northstar-region` policy assignment was configured for **Canada Central** with the **Audit** effect. It provides visibility into resources that violate the approved location requirement.
+
+### 10. Location Deny Policy
+
+The `deny-northstar-region` assignment uses the **Deny** effect with the same approved Canada Central location. Its purpose is to reject noncompliant resource creation.
+
+### 11. Security Validation — East US Blocked
+
+**This was an intentional negative test.** A network security group was deliberately configured for **East US**, outside the approved region. Azure rejected the request with a policy-denial message stating that Northstar resources are permitted only in **Canada Central**. The blocked attempt is evidence that the preventive control worked.
+
+### 12. Resource Delete Lock
+
+A resource-group **Delete** lock named `lock-northstar-delete` was applied to help prevent accidental deletion of the governance resource group.
+
+### 13. Azure Activity Log
+
+The Activity Log shows management events for role assignments, policy assignments, locks, and resource-group updates. These records help establish a change trail.
+
+### 14. Policy Compliance Review
+
+The portal showed both region policies as **Compliant** and **100%** overall compliance, but also **zero evaluated resources**. That result should not be interpreted as a fleet-wide compliance assessment; the East US denial is the direct enforcement test.
+
+### 15. Microsoft Entra Sign-In Logs
+
+Interactive sign-in logs were reviewed to inspect successful and interrupted authentication attempts and their associated applications.
+
+### 16. Microsoft Entra Audit Logs
+
+Directory audit logs showed user-management, authentication-method, and application-management activity, including successful and failed events. This demonstrates identity-level traceability.
+
+### 17. CloudOps Membership
+
+The CloudOps group membership view verifies the direct member associated with the group granted Contributor access.
+
+### 18. Engineering Membership
+
+The Engineering group membership view verifies the direct member associated with the group granted Reader access.
+
+### 19. Security Membership
+
+The Security group membership view verifies the direct member associated with the group granted Reader access; a separate Entra Security Reader role was also documented.
+
+### 20. Final Governance Review
+
+The final resource-group overview confirms **Canada Central**, the Northstar governance tags, and the overall lab scope. The resource list was empty at capture time; the lab focuses on governance and identity controls rather than deploying a production workload.
+
+## Deployment Guides
+
+1. [Resource organization and cost governance](deployment-steps/01-resource-organization.md)
+2. [Microsoft Entra users and security groups](deployment-steps/02-entra-users-groups.md)
+3. [Azure RBAC and directory roles](deployment-steps/03-rbac-roles.md)
+4. [Security defaults and MFA](deployment-steps/04-mfa-security.md)
+5. [Azure Policy and Canada Central enforcement](deployment-steps/05-azure-policy.md)
+6. [Resource locks and monitoring](deployment-steps/06-locks-monitoring.md)
+
+## Key Lessons
+
+- **Audit and Deny serve different purposes:** Audit surfaces violations, while Deny prevents matching deployments.
+- **Negative tests demonstrate enforcement:** The intentionally rejected East US request is direct evidence that the regional control worked.
+- **Permissions must be scoped:** Azure RBAC and Entra directory roles control different surfaces.
+- **Compliance dashboards need context:** 100% with zero evaluated resources does not demonstrate fleet-wide compliance.
+- **Governance is layered:** Cost alerts, resource locks, role assignments, MFA, policies, and logs each address different risks.
+
+## Tools and Technologies
+
+Microsoft Azure Portal · Microsoft Entra ID · Azure RBAC · Azure Policy · Azure Cost Management · Azure Activity Log · Microsoft Authenticator
+
+## Project Scope
+
+This is an educational governance lab documented from Azure portal configuration and test evidence, not a production deployment or independent compliance certification.
